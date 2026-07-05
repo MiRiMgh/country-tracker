@@ -43,7 +43,7 @@ const COUNTRIES = [
   { name: "Румыния", code: "RO", continent: "Европа", status: "признана" },
   { name: "Сан-Марино", code: "SM", continent: "Европа", status: "признана" },
   { name: "Северная Македония", code: "MK", continent: "Европа", status: "признана" },
-  { name: "Сербия", code: "RS", continent: "Европа", status: "признана" },
+  { name: "Сербия", code: "RS", continent: "Европа", status: "признана", ready: true, free: { line: "🟡 Реальный путь к паспорту ЕС-кандидата, но с важной оговоркой", visa: "Безвизово для россиян", dual: "Придётся официально отказаться от гражданства РФ — Сербия двойное гражданство не признаёт (кроме этнических сербов и особых случаев)" } },
   { name: "Словакия", code: "SK", continent: "Европа", status: "признана" },
   { name: "Словения", code: "SI", continent: "Европа", status: "признана" },
   { name: "Украина", code: "UA", continent: "Европа", status: "признана" },
@@ -57,11 +57,11 @@ const COUNTRIES = [
   { name: "Эстония", code: "EE", continent: "Европа", status: "признана" },
   { name: "Кипр", code: "CY", continent: "Европа", status: "признана" },
   { name: "Россия", code: "RU", continent: "Европа/Азия", status: "признана" },
-  { name: "Турция", code: "TR", continent: "Европа/Азия", status: "признана" },
+  { name: "Турция", code: "TR", continent: "Европа/Азия", status: "признана", ready: true, free: { line: "🟢 Один из самых доступных вариантов легализации для россиян", visa: "Безвизово до 60 дней за один заезд, не более 90 дней за 180 дней", dual: "Двойное гражданство с Россией допускается" } },
   { name: "Косово", code: "XK", continent: "Европа", status: "частично признана" },
   { name: "Приднестровье", code: "MD-PR", continent: "Европа", status: "не признана" },
   { name: "Азербайджан", code: "AZ", continent: "Азия", status: "признана" },
-  { name: "Армения", code: "AM", continent: "Азия", status: "признана" },
+  { name: "Армения", code: "AM", continent: "Азия", status: "признана", ready: true, free: { line: "🟢 Самый гладкий путь к паспорту среди популярных направлений", visa: "Безвизово до 180 дней в году", dual: "Двойное гражданство разрешено — отказываться от российского не нужно" } },
   { name: "Афганистан", code: "AF", continent: "Азия", status: "признана" },
   { name: "Бангладеш", code: "BD", continent: "Азия", status: "признана" },
   { name: "Бахрейн", code: "BH", continent: "Азия", status: "признана" },
@@ -69,7 +69,7 @@ const COUNTRIES = [
   { name: "Бутан", code: "BT", continent: "Азия", status: "признана" },
   { name: "Восточный Тимор", code: "TL", continent: "Азия", status: "признана" },
   { name: "Вьетнам", code: "VN", continent: "Азия", status: "признана" },
-  { name: "Грузия", code: "GE", continent: "Азия", status: "признана" },
+  { name: "Грузия", code: "GE", continent: "Азия", status: "признана", ready: true, free: { line: "🟡 Доступно, но путь к паспорту самый долгий из популярных направлений", visa: "Безвизово до 365 дней", dual: "Двойное гражданство не предусмотрено (кроме репатриантов/инвесторов по решению властей)" } },
   { name: "Израиль", code: "IL", continent: "Азия", status: "признана" },
   { name: "Индия", code: "IN", continent: "Азия", status: "признана" },
   { name: "Индонезия", code: "ID", continent: "Азия", status: "признана" },
@@ -90,7 +90,7 @@ const COUNTRIES = [
   { name: "Монголия", code: "MN", continent: "Азия", status: "признана" },
   { name: "Мьянма", code: "MM", continent: "Азия", status: "признана" },
   { name: "Непал", code: "NP", continent: "Азия", status: "признана" },
-  { name: "ОАЭ", code: "AE", continent: "Азия", status: "признана" },
+  { name: "ОАЭ", code: "AE", continent: "Азия", status: "признана", ready: true, free: { line: "🟡 ВНЖ получить легко, но гражданство почти недостижимо", visa: "Для россиян ставится бесплатно при въезде", dual: "Гражданство ОАЭ практически не выдаётся резидентам — точечные случаи по приглашению, не открытая программа" } },
   { name: "Оман", code: "OM", continent: "Азия", status: "признана" },
   { name: "Пакистан", code: "PK", continent: "Азия", status: "признана" },
   { name: "Палестина", code: "PS", continent: "Азия", status: "частично признана" },
@@ -371,6 +371,7 @@ export default function CountryTracker() {
   const [visited, setVisited] = useState(new Set());
   const [query, setQuery] = useState("");
   const [continent, setContinent] = useState("Все");
+  const [onlyReady, setOnlyReady] = useState(false);
   const [activeCountry, setActiveCountry] = useState(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -422,9 +423,10 @@ export default function CountryTracker() {
     return COUNTRIES.filter((c) => {
       const matchesQuery = c.name.toLowerCase().includes(query.toLowerCase());
       const matchesContinent = continent === "Все" || c.continent === continent;
-      return matchesQuery && matchesContinent;
+      const matchesReady = !onlyReady || c.ready;
+      return matchesQuery && matchesContinent && matchesReady;
     });
-  }, [query, continent]);
+  }, [query, continent, onlyReady]);
 
   const percent = Math.round((visited.size / COUNTRIES.length) * 100);
 
@@ -524,6 +526,38 @@ export default function CountryTracker() {
           </button>
         </div>
 
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12, alignItems: "center" }}>
+          <button
+            onClick={() => setOnlyReady((v) => !v)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 999,
+              border: "1px solid " + (onlyReady ? "#16233F" : "#D9D2BC"),
+              background: onlyReady ? "#16233F" : "#FFFDF8",
+              color: onlyReady ? "#F6F1E4" : "#5C574A",
+              fontSize: 12.5,
+              cursor: "pointer",
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: onlyReady ? "#C9A24B" : "#D9D2BC",
+                display: "inline-block",
+              }}
+            />
+            Только готовые страны
+          </button>
+          <span style={{ fontSize: 11.5, color: "#8B8778" }}>
+            {COUNTRIES.filter((c) => c.ready).length} из {COUNTRIES.length} уже оформлены
+          </span>
+        </div>
+
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
           {CONTINENTS.map((c) => (
             <button
@@ -561,6 +595,7 @@ export default function CountryTracker() {
                   padding: "14px 14px 12px",
                   cursor: "pointer",
                   overflow: "hidden",
+                  opacity: c.ready ? 1 : 0.72,
                 }}
                 onClick={() => setActiveCountry(c)}
               >
@@ -633,12 +668,35 @@ export default function CountryTracker() {
             <p style={{ fontSize: 13, color: "#8B8778", margin: "0 0 18px" }}>
               {activeCountry.continent} · {activeCountry.status}
             </p>
+
+            {activeCountry.ready && activeCountry.free && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 10, lineHeight: 1.4 }}>
+                  {activeCountry.free.line}
+                </div>
+                <div style={{ fontSize: 12.5, color: "#3D3A30", lineHeight: 1.6, marginBottom: 8 }}>
+                  <span style={{ fontWeight: 600 }}>Виза для россиян: </span>
+                  {activeCountry.free.visa}
+                </div>
+                <div style={{ fontSize: 12.5, color: "#3D3A30", lineHeight: 1.6 }}>
+                  <span style={{ fontWeight: 600 }}>Двойное гражданство: </span>
+                  {activeCountry.free.dual}
+                </div>
+              </div>
+            )}
+
+            {!activeCountry.ready && (
+              <p style={{ fontSize: 12.5, color: "#8B8778", marginBottom: 14 }}>
+                Подробная информация по этой стране пока готовится.
+              </p>
+            )}
+
             <div style={{ background: "#F6F1E4", border: "1px dashed #D9D2BC", borderRadius: 10, padding: 16, display: "flex", gap: 10, alignItems: "flex-start" }}>
               <Lock size={18} color="#A6382C" style={{ marginTop: 2, flexShrink: 0 }} />
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 4 }}>Доступно по подписке</div>
                 <div style={{ fontSize: 12.5, color: "#5C574A", lineHeight: 1.5 }}>
-                  Визовые требования, Шенген, ВНЖ и ПМЖ, путь к гражданству, проверенные юристы по этой стране.
+                  Подробный визовый гид, ВНЖ, ПМЖ, путь к гражданству и проверенные юристы по этой стране.
                 </div>
               </div>
             </div>
@@ -646,7 +704,7 @@ export default function CountryTracker() {
               onClick={() => { setActiveCountry(null); setShowPaywall(true); }}
               style={{ width: "100%", marginTop: 14, padding: "12px 0", borderRadius: 8, border: "none", background: "#16233F", color: "#F6F1E4", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
             >
-              Открыть подпиской
+              {activeCountry.ready ? "Открыть подробный гид" : "Открыть подпиской"}
             </button>
           </div>
         </div>
