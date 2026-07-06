@@ -12,7 +12,7 @@ export default function Oferta() {
     <div style={{ background: "#F6F1E4", minHeight: "100vh" }}>
       <div style={wrap}>
         <h1 style={h1}>Публичная оферта</h1>
-        <p style={{ ...p, color: "#8B8778", fontSize: 13 }}>Дата последнего обновления: [ДД.ММ.ГГГГ]</p>
+        <p style={{ ...p, color: "#8B8778", fontSize: 13 }}>Дата последнего обновления: [06.07.2026]</p>
 
         <h2 style={h2}>1. Общие положения</h2>
         <p style={p}>
