@@ -324,7 +324,7 @@ const authFetch = (path, body) =>
   }).then((r) => r.json());
 
 function AuthScreen({ onAuthed }) {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // login | signup
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -366,10 +366,11 @@ function AuthScreen({ onAuthed }) {
         minHeight: "100vh",
         background: "#16233F",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "-apple-system, Inter, sans-serif",
-        padding: 16,
+        padding: "16px 16px 40px",
       }}
     >
       <div style={{ background: "#FFFDF8", borderRadius: 16, padding: 32, width: "100%", maxWidth: 360 }}>
@@ -460,10 +461,27 @@ function AuthScreen({ onAuthed }) {
           </button>
         </p>
       </div>
+
+      <div style={{ width: "100%", maxWidth: 360, marginTop: 20 }}>
+        <div style={{ background: "#1F304F", border: "1px solid #33456B", borderRadius: 12, padding: 18, marginBottom: 8 }}>
+          <div style={{ color: "#C9A24B", fontWeight: 700, fontSize: 13.5, marginBottom: 6 }}>Подписка «Паспорт+» — 599 ₽ / месяц</div>
+          <div style={{ color: "#C9C2AE", fontSize: 12.5, lineHeight: 1.5 }}>
+            Полные справочные материалы по визам, ВНЖ, ПМЖ, гражданству и подборка юристов по всем доступным странам. Продлевается автоматически, отменить можно в любой момент.
+          </div>
+        </div>
+        <div style={{ background: "#1F304F", border: "1px solid #33456B", borderRadius: 12, padding: 18 }}>
+          <div style={{ color: "#C9A24B", fontWeight: 700, fontSize: 13.5, marginBottom: 6 }}>Доступ к одной стране — 299 ₽</div>
+          <div style={{ color: "#C9C2AE", fontSize: 12.5, lineHeight: 1.5 }}>
+            Разовая покупка без подписки: полные материалы по одной выбранной стране, доступ навсегда.
+          </div>
+        </div>
+        <p style={{ textAlign: "center", fontSize: 11.5, color: "#7C87A0", marginTop: 14 }}>
+          <a href="/oferta" style={{ color: "#9AA3B8" }}>Публичная оферта</a> · <a href="/contacts" style={{ color: "#9AA3B8" }}>Контакты и реквизиты</a>
+        </p>
+      </div>
     </div>
   );
 }
-
 export default function CountryTracker() {
   const [user, setUser] = useState(null);
   const [visited, setVisited] = useState(new Set());
