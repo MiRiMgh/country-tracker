@@ -11,7 +11,7 @@ export default function Contacts() {
         <div style={{ background: "#FFFDF8", border: "1px solid #E4DDC8", borderRadius: 12, padding: 20, fontSize: 14.5, lineHeight: 1.8 }}>
           <div><strong>Сервис:</strong> Мой паспорт мира</div>
           <div><strong>Самозанятый (плательщик НПД):</strong> [Панаскин Михаил Дмитриевич]</div>
-          <div><strong>ИНН:</strong> [183313564]</div>
+          <div><strong>ИНН:</strong> [183313564572]</div>
           <div><strong>E-mail:</strong> [gdmirim@gmail.com]</div>
           <div><strong>Телефон:</strong> [+7 912 752 48 47]</div>
           <div><strong>Почтовый адрес:</strong> [АДРЕС, при наличии]</div>
