@@ -324,7 +324,7 @@ const authFetch = (path, body) =>
   }).then((r) => r.json());
 
 function AuthScreen({ onAuthed }) {
-  const [mode, setMode] = useState("login"); // login | signup
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -482,6 +482,7 @@ function AuthScreen({ onAuthed }) {
     </div>
   );
 }
+
 export default function CountryTracker() {
   const [user, setUser] = useState(null);
   const [visited, setVisited] = useState(new Set());
@@ -489,6 +490,9 @@ export default function CountryTracker() {
   const [continent, setContinent] = useState("Все");
   const [onlyReady, setOnlyReady] = useState(false);
   const [devUnlocked, setDevUnlocked] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [purchasedCountries, setPurchasedCountries] = useState(new Set());
+  const [payLoading, setPayLoading] = useState(false);
   const [activeCountry, setActiveCountry] = useState(null);
   const [activeTab, setActiveTab] = useState("vnj");
   const [showPaywall, setShowPaywall] = useState(false);
@@ -503,7 +507,47 @@ export default function CountryTracker() {
       .then((rows) => {
         if (Array.isArray(rows)) setVisited(new Set(rows.map((r) => r.country_code)));
       });
+
+    fetch(`${SUPABASE_URL}/rest/v1/subscriptions?select=status,current_period_end`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` },
+    })
+      .then((r) => r.json())
+      .then((rows) => {
+        if (Array.isArray(rows) && rows[0]) {
+          const active = rows[0].status === "active" && new Date(rows[0].current_period_end) > new Date();
+          setHasSubscription(active);
+        }
+      });
+
+    fetch(`${SUPABASE_URL}/rest/v1/country_purchases?select=country_code`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` },
+    })
+      .then((r) => r.json())
+      .then((rows) => {
+        if (Array.isArray(rows)) setPurchasedCountries(new Set(rows.map((r) => r.country_code)));
+      });
   }, [user]);
+
+  const pay = async (type, countryCode) => {
+    setPayLoading(true);
+    try {
+      const res = await fetch("/api/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${user.token}` },
+        body: JSON.stringify({ type, countryCode }),
+      });
+      const data = await res.json();
+      if (data.confirmationUrl) {
+        window.location.href = data.confirmationUrl;
+      } else {
+        alert(data.error || "Не удалось создать платёж");
+      }
+    } catch (e) {
+      alert("Ошибка соединения с сервером оплаты");
+    } finally {
+      setPayLoading(false);
+    }
+  };
 
   const toggleVisited = async (code) => {
     if (!user) return;
@@ -824,7 +868,7 @@ export default function CountryTracker() {
               </p>
             )}
 
-            {devUnlocked && activeCountry.ready && activeCountry.paid ? (
+            {(devUnlocked || hasSubscription || purchasedCountries.has(activeCountry.code)) && activeCountry.ready && activeCountry.paid ? (
               <div>
                 <div style={{ display: "flex", gap: 6, marginBottom: 14, borderBottom: "1px solid #E4DDC8" }}>
                   {[
@@ -888,8 +932,17 @@ export default function CountryTracker() {
                   onClick={() => { setActiveCountry(null); setShowPaywall(true); }}
                   style={{ width: "100%", marginTop: 14, padding: "12px 0", borderRadius: 8, border: "none", background: "#16233F", color: "#F6F1E4", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
                 >
-                  {activeCountry.ready ? "Открыть подробный гид" : "Открыть подпиской"}
+                  Оформить подписку
                 </button>
+                {activeCountry.ready && (
+                  <button
+                    onClick={() => pay("country", activeCountry.code)}
+                    disabled={payLoading}
+                    style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 8, border: "1px solid #16233F", background: "none", color: "#16233F", fontSize: 13.5, fontWeight: 600, cursor: payLoading ? "default" : "pointer", opacity: payLoading ? 0.7 : 1 }}
+                  >
+                    {payLoading ? "Секунду..." : "Купить доступ только к этой стране — 299 ₽"}
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -910,11 +963,15 @@ export default function CountryTracker() {
             <div style={{ fontSize: 28, fontWeight: 700, marginBottom: 4 }}>
               599 ₽<span style={{ fontSize: 13, fontWeight: 400, color: "#9AA3B8" }}> / месяц</span>
             </div>
-            <button style={{ width: "100%", marginTop: 14, padding: "12px 0", borderRadius: 8, border: "none", background: "#C9A24B", color: "#16233F", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Оформить подписку
+            <button
+              onClick={() => pay("subscription")}
+              disabled={payLoading}
+              style={{ width: "100%", marginTop: 14, padding: "12px 0", borderRadius: 8, border: "none", background: "#C9A24B", color: "#16233F", fontSize: 14, fontWeight: 700, cursor: payLoading ? "default" : "pointer", opacity: payLoading ? 0.7 : 1 }}
+            >
+              {payLoading ? "Секунду..." : "Оформить подписку"}
             </button>
             <p style={{ fontSize: 11, color: "#7C87A0", marginTop: 10, textAlign: "center" }}>
-              Демо-кнопка. Реальная оплата подключится через Stripe на следующем шаге.
+              Оплата через ЮKassa. Списание повторяется каждый месяц, отменить можно в любой момент.
             </p>
           </div>
         </div>
