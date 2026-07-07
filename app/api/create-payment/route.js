@@ -37,7 +37,7 @@ export async function POST(req) {
     const shopId = process.env.YOOKASSA_SHOP_ID;
     const secretKey = process.env.YOOKASSA_SECRET_KEY;
     const auth = Buffer.from(`${shopId}:${secretKey}`).toString("base64");
-    const origin = req.headers.get("origin") || "https://country-tracker-mu.vercel.app";
+    const origin = req.headers.get("origin") || "https://moipasport.ru";
 
     const paymentRes = await fetch("https://api.yookassa.ru/v3/payments", {
       method: "POST",
