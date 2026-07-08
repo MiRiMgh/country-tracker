@@ -36,15 +36,24 @@ export async function POST(req) {
     if (type === "subscription") {
       const periodEnd = new Date();
       periodEnd.setDate(periodEnd.getDate() + 30);
+
+      // Сохраняем способ оплаты (если ЮKassa его вернула и он готов к повторному использованию) —
+      // без этого автопродление на следующий месяц будет невозможно.
+      const paymentMethodId =
+        payment.payment_method && payment.payment_method.saved ? payment.payment_method.id : null;
+
+      const payload = {
+        user_id,
+        status: "active",
+        current_period_end: periodEnd.toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      if (paymentMethodId) payload.payment_method_id = paymentMethodId;
+
       await fetch(`${SUPABASE_URL}/rest/v1/subscriptions`, {
         method: "POST",
         headers: { ...baseHeaders, Prefer: "resolution=merge-duplicates,return=minimal" },
-        body: JSON.stringify({
-          user_id,
-          status: "active",
-          current_period_end: periodEnd.toISOString(),
-          updated_at: new Date().toISOString(),
-        }),
+        body: JSON.stringify(payload),
       });
     } else if (type === "country" && country_code) {
       await fetch(`${SUPABASE_URL}/rest/v1/country_purchases`, {
