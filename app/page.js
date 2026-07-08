@@ -316,6 +316,7 @@ const COUNTRIES = [
 
 const CONTINENTS = ["Все", ...Array.from(new Set(COUNTRIES.map((c) => c.continent)))];
 
+// Простой клиент к Supabase через fetch, без SDK
 const authFetch = (path, body) =>
   fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
     method: "POST",
@@ -324,7 +325,7 @@ const authFetch = (path, body) =>
   }).then((r) => r.json());
 
 function AuthScreen({ onAuthed }) {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // login | signup
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -484,13 +485,15 @@ function AuthScreen({ onAuthed }) {
 }
 
 export default function CountryTracker() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // { token, id, email }
   const [visited, setVisited] = useState(new Set());
   const [query, setQuery] = useState("");
   const [continent, setContinent] = useState("Все");
   const [onlyReady, setOnlyReady] = useState(false);
   const [devUnlocked, setDevUnlocked] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [subscriptionEnd, setSubscriptionEnd] = useState(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [purchasedCountries, setPurchasedCountries] = useState(new Set());
   const [payLoading, setPayLoading] = useState(false);
   const [activeCountry, setActiveCountry] = useState(null);
@@ -498,6 +501,7 @@ export default function CountryTracker() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
+  // Загружаем отмеченные страны из базы после входа
   useEffect(() => {
     if (!user) return;
     fetch(`${SUPABASE_URL}/rest/v1/visited_countries?select=country_code`, {
@@ -514,8 +518,10 @@ export default function CountryTracker() {
       .then((r) => r.json())
       .then((rows) => {
         if (Array.isArray(rows) && rows[0]) {
-          const active = rows[0].status === "active" && new Date(rows[0].current_period_end) > new Date();
+          const active = new Date(rows[0].current_period_end) > new Date();
           setHasSubscription(active);
+          setSubscriptionEnd(rows[0].current_period_end);
+          setSubscriptionStatus(rows[0].status);
         }
       });
 
@@ -527,6 +533,27 @@ export default function CountryTracker() {
         if (Array.isArray(rows)) setPurchasedCountries(new Set(rows.map((r) => r.country_code)));
       });
   }, [user]);
+
+  const cancelSubscription = async () => {
+    if (!confirm("Отменить подписку? Доступ сохранится до конца оплаченного периода, дальше автосписание не запустится.")) return;
+    setPayLoading(true);
+    try {
+      const res = await fetch("/api/cancel-subscription", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setSubscriptionStatus("canceled");
+      } else {
+        alert(data.error || "Не удалось отменить подписку");
+      }
+    } catch (e) {
+      alert("Ошибка соединения с сервером");
+    } finally {
+      setPayLoading(false);
+    }
+  };
 
   const pay = async (type, countryCode) => {
     setPayLoading(true);
@@ -963,16 +990,36 @@ export default function CountryTracker() {
             <div style={{ fontSize: 28, fontWeight: 700, marginBottom: 4 }}>
               599 ₽<span style={{ fontSize: 13, fontWeight: 400, color: "#9AA3B8" }}> / месяц</span>
             </div>
-            <button
-              onClick={() => pay("subscription")}
-              disabled={payLoading}
-              style={{ width: "100%", marginTop: 14, padding: "12px 0", borderRadius: 8, border: "none", background: "#C9A24B", color: "#16233F", fontSize: 14, fontWeight: 700, cursor: payLoading ? "default" : "pointer", opacity: payLoading ? 0.7 : 1 }}
-            >
-              {payLoading ? "Секунду..." : "Оформить подписку"}
-            </button>
-            <p style={{ fontSize: 11, color: "#7C87A0", marginTop: 10, textAlign: "center" }}>
-              Оплата через ЮKassa. Списание повторяется каждый месяц, отменить можно в любой момент.
-            </p>
+            {hasSubscription ? (
+              <>
+                <div style={{ background: "#1F304F", borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: "#C9C2AE", marginTop: 14 }}>
+                  Подписка активна до {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("ru-RU") : "—"}.{" "}
+                  {subscriptionStatus === "canceled" ? "Автопродление отключено." : "Автопродление включено."}
+                </div>
+                {subscriptionStatus !== "canceled" && (
+                  <button
+                    onClick={cancelSubscription}
+                    disabled={payLoading}
+                    style={{ width: "100%", marginTop: 10, padding: "11px 0", borderRadius: 8, border: "1px solid #33456B", background: "none", color: "#C9C2AE", fontSize: 13, fontWeight: 600, cursor: payLoading ? "default" : "pointer" }}
+                  >
+                    {payLoading ? "Секунду..." : "Отменить подписку"}
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => pay("subscription")}
+                  disabled={payLoading}
+                  style={{ width: "100%", marginTop: 14, padding: "12px 0", borderRadius: 8, border: "none", background: "#C9A24B", color: "#16233F", fontSize: 14, fontWeight: 700, cursor: payLoading ? "default" : "pointer", opacity: payLoading ? 0.7 : 1 }}
+                >
+                  {payLoading ? "Секунду..." : "Оформить подписку"}
+                </button>
+                <p style={{ fontSize: 11, color: "#7C87A0", marginTop: 10, textAlign: "center" }}>
+                  Оплата через ЮKassa. Списание повторяется каждый месяц, отменить можно в любой момент.
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}
