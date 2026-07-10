@@ -11,7 +11,7 @@ export default function Consent() {
     <div style={{ background: "#F6F1E4", minHeight: "100vh" }}>
       <div style={wrap}>
         <h1 style={h1}>Согласие на обработку персональных данных</h1>
-        <p style={{ ...p, color: "#8B8778", fontSize: 13 }}>Дата последнего обновления: [ДД.ММ.ГГГГ]</p>
+        <p style={{ ...p, color: "#8B8778", fontSize: 13 }}>Дата последнего обновления: [10.07.2026]</p>
 
         <p style={p}>
           Регистрируясь на сайте «Мой паспорт мира» (https://moipasport.ru), я даю своё согласие
@@ -51,7 +51,7 @@ export default function Consent() {
 
         <p style={p}>
           <strong>6. Порядок отзыва согласия:</strong> согласие может быть отозвано в любой момент путём
-          направления заявления на адрес [EMAIL] либо удалением учётной записи в личном кабинете Сайта.
+          направления заявления на адрес [gdmirim@gmail.com] либо удалением учётной записи в личном кабинете Сайта.
         </p>
 
         <p style={{ ...p, fontSize: 12, color: "#A39D8A", marginTop: 30 }}>
