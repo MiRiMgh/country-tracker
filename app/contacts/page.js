@@ -14,7 +14,6 @@ export default function Contacts() {
           <div><strong>ИНН:</strong> 183313564572</div>
           <div><strong>E-mail:</strong> gdmirim@gmail.com</div>
           <div><strong>Телефон:</strong> +7 912 752 48 47</div>
-          <div><strong>Почтовый адрес:</strong> gdmirim@gmail.com</div>
         </div>
 
         <p style={{ fontSize: 12.5, color: "#8B8778", marginTop: 20 }}>
