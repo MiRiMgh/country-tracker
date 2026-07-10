@@ -330,6 +330,7 @@ function AuthScreen({ onAuthed }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
 
   const submit = async () => {
     if (loading) return;
@@ -429,9 +430,26 @@ function AuthScreen({ onAuthed }) {
             </div>
           )}
 
+          {mode === "signup" && (
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 11.5, color: "#5C574A", marginBottom: 14, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={consentChecked}
+                onChange={(e) => setConsentChecked(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                Я даю согласие на обработку персональных данных в соответствии с{" "}
+                <a href="/consent" target="_blank" style={{ color: "#A6382C" }}>согласием на обработку персональных данных</a>{" "}
+                и{" "}
+                <a href="/privacy" target="_blank" style={{ color: "#A6382C" }}>политикой обработки персональных данных</a>
+              </span>
+            </label>
+          )}
+
           <button
             onClick={submit}
-            disabled={loading || !email || password.length < 6}
+            disabled={loading || !email || password.length < 6 || (mode === "signup" && !consentChecked)}
             style={{
               width: "100%",
               padding: "12px 0",
@@ -442,7 +460,7 @@ function AuthScreen({ onAuthed }) {
               fontSize: 14,
               fontWeight: 600,
               cursor: loading ? "default" : "pointer",
-              opacity: loading || !email || password.length < 6 ? 0.6 : 1,
+              opacity: loading || !email || password.length < 6 || (mode === "signup" && !consentChecked) ? 0.6 : 1,
             }}
           >
             {loading ? "Секунду..." : mode === "login" ? "Войти" : "Создать аккаунт"}
@@ -477,7 +495,7 @@ function AuthScreen({ onAuthed }) {
           </div>
         </div>
         <p style={{ textAlign: "center", fontSize: 11.5, color: "#7C87A0", marginTop: 14 }}>
-          <a href="/oferta" style={{ color: "#9AA3B8" }}>Публичная оферта</a> · <a href="/contacts" style={{ color: "#9AA3B8" }}>Контакты и реквизиты</a>
+          <a href="/oferta" style={{ color: "#9AA3B8" }}>Публичная оферта</a> · <a href="/privacy" style={{ color: "#9AA3B8" }}>Политика конфиденциальности</a> · <a href="/contacts" style={{ color: "#9AA3B8" }}>Контакты и реквизиты</a>
         </p>
       </div>
     </div>
