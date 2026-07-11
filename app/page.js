@@ -338,6 +338,18 @@ function AuthScreen({ onAuthed }) {
     setLoading(true);
     try {
       if (mode === "signup") {
+        // Сначала — первичная запись на территории России (требование 152-ФЗ),
+        // затем — создание рабочего аккаунта в Supabase
+        try {
+          await fetch("/api/register-primary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+        } catch (e) {
+          console.error("Не удалось сделать первичную запись:", e);
+        }
+
         const data = await authFetch("signup", { email, password });
         if (data.error_description || data.msg) throw new Error(data.error_description || data.msg);
         if (data.access_token) {
